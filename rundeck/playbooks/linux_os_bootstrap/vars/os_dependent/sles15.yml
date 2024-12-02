@@ -1,0 +1,4 @@
+---
+install_command: zypper in -y
+update_command: zypper ref &&
+upgrade_command: zypper up -y

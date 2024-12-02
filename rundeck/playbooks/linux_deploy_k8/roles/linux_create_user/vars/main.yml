@@ -1,0 +1,7 @@
+---
+sudo_options:
+  is_sudoer: true
+  sudo_permissions: "{{ username }} ALL=(ALL) NOPASSWD: /usr/bin/kubectl, /usr/bin/kubeadm"
+  alias_for_sudo: |
+      alias kubectl='sudo /usr/bin/kubectl'
+      alias kubeadm='sudo /usr/bin/kubeadm'

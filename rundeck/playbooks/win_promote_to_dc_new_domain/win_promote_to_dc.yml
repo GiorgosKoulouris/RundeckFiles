@@ -1,0 +1,14 @@
+---
+- name: Windows - Promote to DC
+  hosts: windows
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+    - name: Gather facts
+      setup:
+    - name: Load per host variables
+      when: load_hostvars is defined and load_hostvars
+      ansible.builtin.include_vars: "vars/hostvars/{{ hostname }}.yml"
+    - name: Promote to DC
+      include_tasks: playbook_actions.yml

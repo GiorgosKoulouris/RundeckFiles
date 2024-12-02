@@ -1,0 +1,16 @@
+---
+- name: Install Docker | Load Amazon or Ubuntu distribution variables
+  ansible.builtin.include_vars: "vars/{{ ansible_facts['distribution']|lower }}{{ ansible_facts['distribution_major_version'] }}.yml"
+  when: ansible_facts['distribution'] in ['Ubuntu','Amazon']
+
+- name: Install Docker | Load SUSE distribution variables
+  ansible.builtin.include_vars: "vars/sles{{ ansible_facts['distribution_major_version'] }}.yml"
+  when: ansible_facts['os_family'] == "Suse"
+
+- name: Install Docker | Load RedHat distribution variables
+  ansible.builtin.include_vars: "vars/rhel{{ ansible_facts['distribution_major_version'] }}.yml"
+  when: ansible_facts['distribution'] == 'RedHat'
+
+- name: Install Docker | Load CentOS, Oracle distribution variables
+  ansible.builtin.include_vars: "vars/ol{{ ansible_facts['distribution_major_version'] }}.yml"
+  when: ansible_facts['distribution'] in ['CentOS','OracleLinux']

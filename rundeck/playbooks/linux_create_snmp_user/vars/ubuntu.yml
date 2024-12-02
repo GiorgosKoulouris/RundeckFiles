@@ -1,0 +1,8 @@
+---
+snmp_pkgs:
+  - snmp
+  - snmpd
+  - libsnmp-dev
+snmp_etc_conf_file: /etc/snmp/snmpd.conf
+snmp_lib_conf_file: /var/lib/snmp/snmpd.conf
+snmp_user_conf_file: /usr/share/snmp/snmpd.conf

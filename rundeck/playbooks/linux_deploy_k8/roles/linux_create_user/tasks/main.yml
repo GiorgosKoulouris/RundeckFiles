@@ -1,0 +1,3 @@
+---
+- name: Create Linux User
+  include_tasks: create_user.yml

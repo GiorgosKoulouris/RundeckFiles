@@ -1,0 +1,17 @@
+---
+- name: Linux SNMP Actions
+  become_method: sudo
+  become_user: root
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+    - name: Gather facts
+      setup:
+    - name: Load distribution variables
+      include_tasks: load_vars.yml
+    - name: Load service facts
+      service_facts:
+    - name: SNMP Actions
+      include_tasks: snmp_actions.yml

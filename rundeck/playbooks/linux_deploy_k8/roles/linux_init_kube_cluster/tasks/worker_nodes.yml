@@ -1,0 +1,14 @@
+---
+- name: Change hostname
+  become: true
+  shell: "hostnamectl set-hostname {{ hostname }}"
+
+- name: Initialize kubernetes cluster | Worker nodes | Update host files
+  become: true
+  blockinfile:
+    path: /etc/hosts
+    block: "{{ lookup('file', cluster_hostfiles ) }}"
+    state: present
+
+- name: Initialize kubernetes cluster | Worker nodes | Join the cluster
+  shell: "{{ hostvars['controlNode1'].join_command }}"

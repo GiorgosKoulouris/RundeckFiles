@@ -1,0 +1,45 @@
+---
+- name: Install snmp packages
+  become: true
+  ansible.builtin.package:
+    name: "{{ snmp_pkgs }}"
+    state: latest
+
+- name: Stop snmpd
+  become: true
+  service:
+    name: snmpd
+    state: stopped
+
+- name: Remove existing entries for snmp user | conf file
+  become: true
+  lineinfile:
+    search_string: "{{ snmp_user }}"
+    state: absent
+    path: "{{ snmp_user_conf_file }}"
+
+- name: Remove existing entries for snmp user | lib file
+  become: true
+  lineinfile:
+    search_string: "{{ snmp_user }}"
+    state: absent
+    path: "{{ snmp_lib_conf_file }}"
+
+- name: Configure snmpd address binds
+  become: true
+  lineinfile:
+    regexp: "^agentaddress"
+    line: agentAddress udp:161
+    path: "{{ snmp_etc_conf_file }}"
+
+- name: Create SNMPv3 user
+  become: true
+  shell: "net-snmp-create-v3-user -ro -A {{ snmp_pass }} -X {{ snmp_pass }} -a SHA -x AES {{ snmp_user }}"
+
+- name: Start and enable snmpd
+  become: true
+  service:
+    name: snmpd
+    state: started
+    enabled: yes
+

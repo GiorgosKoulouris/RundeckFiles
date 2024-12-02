@@ -1,0 +1,37 @@
+- name: Create the user
+  become: true
+  command: useradd -m -s /bin/bash "{{ username }}"
+  ignore_errors: true # Ignore error if user already exists
+  when: username not in ansible_facts.get('user_id', [])
+
+- name: Set user password
+  become: true
+  command: echo "{{ username }}:{{ password }}" | chpasswd
+  when: password | length > 0
+
+- name: Create the .ssh directory
+  become: true
+  file:
+    path: "/home/{{ username }}/.ssh"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: "0700"
+
+- name: Add SSH public key
+  become: true
+  ansible.posix.authorized_key:
+    user: "{{ username }}"
+    key: "{{ lookup('file', ssh_key ) }}"
+    state: present
+    exclusive: true
+
+- name: Modify sudo permissions
+  when: sudo_command | length > 0
+  become: true
+  copy:
+    content: "{{ username }} ALL=(ALL) NOPASSWD: {{ sudo_command }}"
+    dest: "/etc/sudoers.d/99-{{ username }}-user"
+    owner: root
+    group: root
+    mode: "0600"

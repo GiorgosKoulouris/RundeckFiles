@@ -1,0 +1,2 @@
+ip,hostname,user,password,domain,netbios,mode,safemodepass,empty
+10.0.10.10,MYADC00,Administrator,ansiblePassword,mydomain.local,MYDOMAIN,Win2012R2,Welcome12!@,

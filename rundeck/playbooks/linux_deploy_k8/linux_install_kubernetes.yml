@@ -1,0 +1,14 @@
+---
+- name: Install kubernetes
+  become_method: sudo
+  become_user: root
+  hosts: allNodes
+  gather_facts: false
+  tasks:
+    - name: Install kubernetes | Wait for connection
+      wait_for_connection:
+    - name: Install kubernetes | Gather facts
+      setup:
+    - name: Install kubernetes | Run installation
+      include_role:
+        name: linux_install_kubernetes

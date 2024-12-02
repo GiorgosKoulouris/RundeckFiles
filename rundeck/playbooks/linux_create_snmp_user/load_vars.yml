@@ -1,0 +1,12 @@
+---
+- name: Create SNMP User | Load Amazon or Ubuntu distribution variables
+  ansible.builtin.include_vars: "vars/{{ ansible_facts['distribution']|lower }}.yml"
+  when: ansible_facts['distribution'] in ['Ubuntu','Amazon']
+
+- name: Create SNMP User | Load SUSE distribution variables
+  ansible.builtin.include_vars: "vars/sles.yml"
+  when: ansible_facts['os_family'] == "Suse"
+
+- name: Create SNMP User | Load RedHat, CentOS, Oracle distribution variables
+  ansible.builtin.include_vars: "vars/el.yml"
+  when: ansible_facts['distribution'] in ['CentOS','OracleLinux','RedHat']

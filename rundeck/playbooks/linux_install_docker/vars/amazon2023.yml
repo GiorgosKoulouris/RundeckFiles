@@ -1,0 +1,8 @@
+---
+install_command: dnf install -y
+update_command: echo &&
+upgrade_command: dnf update -y
+prerequisite_packages:
+docker:
+  repo_command: echo
+  packages: docker

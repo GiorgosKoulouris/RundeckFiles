@@ -1,0 +1,17 @@
+---
+- name: Run Linux Bootstrap
+  become_method: sudo
+  become_user: root
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Linux Bootstrap | Wait for connection
+      wait_for_connection:
+    - name: Linux Bootstrap | Gather facts
+      setup:
+    - name: Linux Bootstrap | Load distribution variables
+      include_tasks: load_vars.yml
+    - name: Linux Bootstrap | Load service facts
+      service_facts:
+    - name: Linux Bootstrap | OS Configuration
+      include_tasks: playbook_actions.yml

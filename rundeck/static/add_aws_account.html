@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCO Rundeck - Instructions</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      color: #ECDFCC;
+      background-color: #1E201E;
+    }
+    h1 {
+      color: #ECDFCC;
+    }
+    pre {
+      background-color: #3C3D37;
+      border: 1px solid #ECDFCC;
+      padding: 10px;
+      overflow-x: auto;
+      border-radius: 5px;
+    }
+    code {
+      color: #ECDFCC;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #3C3D37;
+      color: #ECDFCC;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #697565;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Add an AWS account to Rundeck for temp user management</h1>
+  <p>In order to configure an AWS account for temporary user management using Rundeck and Vault, follow the steps below.</p>
+
+  <p>
+    Copy the code below and execute it against the AWS account you want to add to Rundeck.This will provision the following:</p>
+
+  <ol>
+    <li>A user for Hashicorp Vault with IAM access for user management</li>
+    <li>A role that will have access to create login profiles for these users</li>
+    <li>A lambda function that deletes user login profiles based on user tags (ec2c_lifespan tag)</li>
+    <li>An EventBridge rule that will be used to trigger the lamda function every 30 minutes</li>
+    <li>A dedicated CloudWatch log group will be created for the lamda function. You may want to consider setting/modifying the retention policy of these logs</li>
+  </ol>
+
+  <p>
+    <b>IMPORTANT NOTE:</b>
+    All users managed by EC2C Hashicorp start with 'EC2C-Temp-'. All related policies narrow the permissions to these users.
+  </p>
+
+  <p>
+    When running the job provide the display name for the AWS account. If you run the job against an existing AWS account, the respective account will be reconfigured (overwrite)
+  </p>
+
+  <h2>Execute the following on your AWS account to create the necessary users and roles</h2>
+
+  <button onclick="copyToClipboard()">Copy Code</button>
+
+  <pre id="codeBlock"><code>
+# ------------ Set variables ------------
+region="eu-central-1" # modify accordingly
+accountID="$(aws sts get-caller-identity --no-cli-pager | jq .Account | sed 's/"//g')"
+policyName="EC2C_PL_TempUserManagement"           # You can modify accordingly
+vaultUsername=EC2C_HV_TempUserAdmin               # You can modify accordingly
+extRoleName=EC2C_RD_UserProfileManager            # You can modify accordingly
+lamdaFunctionName="EC2C_LD_DeleteUserProfile"     # You can modify accordingly
+lamdaRoleName="EC2C_LD_UserProfileDelete"         # You can modify accordingly
+eventRuleName="EC2C_EV_DeleteExpiredUserProfiles" # You can modify accordingly
+
+# ----------- Create the vault user ------------
+aws iam create-user --user-name $vaultUsername &gt;/dev/null && echo "Vault user created" || exit 1
+
+cat &lt;&lt;EOF &gt;policy.json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "VisualEditor0",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateUser",
+        "iam:GetUser",
+        "iam:DeleteUser",
+        "iam:TagUser",
+        "iam:ListUserPolicies",
+        "iam:ListAttachedUserPolicies",
+        "iam:PutUserPolicy",
+        "iam:AttachUserPolicy",
+        "iam:DeleteUserPolicy",
+        "iam:DetachUserPolicy",
+        "iam:ListAccessKeys",
+        "iam:CreateAccessKey",
+        "iam:DeleteAccessKey",
+        "iam:AddUserToGroup",
+        "iam:RemoveUserFromGroup",
+        "iam:ListGroupsForUser",
+        "iam:CreateLoginProfile",
+        "iam:UpdateLoginProfile"
+      ],
+      "Resource": "arn:aws:iam::${accountID}:user/EC2C-Temp-*"
+    }
+  ]
+}
+EOF
+
+aws iam create-policy --policy-name $policyName --policy-document file://policy.json &gt;/dev/null &&
+  echo "EC2C policy created" || exit 1
+
+aws iam attach-user-policy --user-name $vaultUsername --policy-arn "arn:aws:iam::${accountID}:policy/$policyName" &gt;/dev/null &&
+  echo "EC2C policy attached to main user" || exit 1
+
+# ----------- Create the role for profile creation ------------
+cat &lt;&lt;EOF &gt;trust-policy.json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Statement1",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::727845353620:user/rndk-svc-user"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+aws iam create-role --role-name $extRoleName --assume-role-policy-document file://trust-policy.json &gt;/dev/null &&
+  echo "EC2C external role created" || exit 1
+
+aws iam attach-role-policy --role-name $extRoleName --policy-arn "arn:aws:iam::${accountID}:policy/$policyName" &gt;/dev/null &&
+  echo "EC2C policy attached to external role" || exit 1
+
+# ----------- Create lamda function ------------
+cat &lt;&lt;EOF &gt;trust-policy.json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+aws iam create-role --role-name $lamdaRoleName --assume-role-policy-document file://trust-policy.json --no-cli-pager &gt;/dev/null &&
+  echo "Lambda role created" || exit 1
+
+aws iam attach-role-policy --role-name $lamdaRoleName --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole --no-cli-pager &gt;/dev/null &&
+  echo "Main policy attached to lambda role" || exit 1
+
+cat &lt;&lt;EOF &gt;policy.json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "VisualEditor0",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListUsers",
+        "iam:ListUserTags"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "VisualEditor1",
+      "Effect": "Allow",
+      "Action": "iam:DeleteLoginProfile",
+      "Resource": "arn:aws:iam::${accountID}:user/EC2C-Temp-*"
+    }
+  ]
+}
+EOF
+
+aws iam put-role-policy --role-name $lamdaRoleName --policy-name "$lamdaRoleName-Policy" --policy-document file://policy.json --no-cli-pager &gt;/dev/null &&
+  echo "Use policy attached to lambda role" || exit 1
+
+# Create the lamda
+cat &lt;&lt;EOF &gt;deleteExpiredUserProfiles.py
+import boto3
+import datetime
+import re
+
+def lambda_handler(event, context):
+  iam = boto3.client('iam')
+  users = iam.list_users()
+  current_time = datetime.datetime.now(datetime.timezone.utc)
+
+  for user in users['Users']:
+    if user['UserName'].startswith('EC2C-Temp'):
+      # Check tags for the user
+      tags = iam.list_user_tags(UserName=user['UserName'])
+      lifespan = next((tag['Value'] for tag in tags['Tags'] if tag['Key'] == 'ec2c_lifespan'), None)
+
+      if lifespan:
+        # Calculate user creation time
+        creation_time = user['CreateDate']
+        age = (current_time - creation_time).total_seconds()
+
+        if age &gt; float(lifespan):
+          # Delete the user's login profile
+          try:
+            iam.delete_login_profile(UserName=user['UserName'])
+            print(f"Deleted login profile for user: {user['UserName']}")
+          except iam.exceptions.NoSuchEntityException:
+            print(f"No login profile for user: {user['UserName']}")
+EOF
+
+zip deleteExpiredUserProfiles.zip deleteExpiredUserProfiles.py
+
+sleep 5
+aws lambda create-function \
+  --function-name $lamdaFunctionName \
+  --zip-file fileb://deleteExpiredUserProfiles.zip \
+  --handler deleteExpiredUserProfiles.lambda_handler \
+  --runtime python3.8 \
+  --role "arn:aws:iam::${accountID}:role/${lamdaRoleName}" \
+  --no-cli-pager &gt;/dev/null && echo "Created lambda function" || exit 1
+
+aws events put-rule --schedule-expression "rate(30 minutes)" --name $eventRuleName --no-cli-pager &gt;/dev/null && echo "Created event rule" || exit 1
+
+# ---------------- Create the EventBridge rule -----------
+aws lambda add-permission \
+  --function-name $lamdaFunctionName \
+  --principal events.amazonaws.com \
+  --statement-id CheckExpiredUserProfiles \
+  --action "lambda:InvokeFunction" \
+  --source-arn "arn:aws:events:${region}:${accountID}:rule/${eventRuleName}" \
+  --no-cli-pager &gt;/dev/null && echo "Modified lambda permissions" || exit 1
+
+aws events put-targets --rule $eventRuleName \
+  --targets "Id"="1","Arn"="arn:aws:lambda:${region}:${accountID}:function:${lamdaFunctionName}" \
+  --no-cli-pager &gt;/dev/null && echo "Added target to eventbridge rule" || exit 1
+
+extRoleArn="$(aws iam get-role --role-name $extRoleName --query 'Role.Arn' --output text)"
+
+vaultAccessKey="$(aws iam create-access-key --user-name $vaultUsername)"
+vaultAccessKeyID="$(echo $vaultAccessKey | jq -r '.AccessKey.AccessKeyId')"
+vaultSecretKeyID="$(echo $vaultAccessKey | jq -r '.AccessKey.SecretAccessKey')"
+
+echo
+echo
+printf "Access Key ID: %s\nSecret Key ID: %s\nRole ARN: %s\n" \
+  $vaultAccessKeyID $vaultSecretKeyID $extRoleArn
+
+  </code></pre>
+
+  <script>
+    function copyToClipboard() {
+      const codeBlock = document.getElementById('codeBlock').innerText;
+      navigator.clipboard.writeText(codeBlock)
+        .then(() => {
+          alert('Code copied to clipboard!');
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+        });
+    }
+  </script>
+
+</body>
+</html>
+

@@ -1,0 +1,13 @@
+---
+- name: Linux create user
+  become_method: sudo
+  hosts: all
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+    - name: Gather facts
+      setup:
+    - name: Create User Actions
+      include_tasks: playbook_actions.yml

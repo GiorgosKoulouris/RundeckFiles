@@ -1,0 +1,8 @@
+---
+install_command: dnf install -y
+update_command: echo &&
+upgrade_command: dnf update -y
+prerequisite_packages: yum-utils
+docker:
+  repo_command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  packages: docker-ce docker-ce-cli containerd.io

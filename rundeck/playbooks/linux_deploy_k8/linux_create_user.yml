@@ -1,0 +1,14 @@
+---
+- name: Create Linux User
+  become_method: sudo
+  become_user: root
+  hosts: allNodes
+  gather_facts: false
+  tasks:
+    - name: Create User | Wait for connection
+      wait_for_connection:
+    - name: Create User | Gather facts
+      setup:
+    - name: Create User | Run installation
+      include_role:
+        name: linux_create_user

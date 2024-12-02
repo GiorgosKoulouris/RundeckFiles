@@ -1,0 +1,6 @@
+---
+# ***************************************************************
+# Choose if you want to install calico and which version        *
+# ***************************************************************
+install_calico: true # true/false
+calico_version: v3.27.0 # v3.27.0

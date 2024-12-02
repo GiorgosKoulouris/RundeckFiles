@@ -1,0 +1,17 @@
+---
+- name: Run Install Docker
+  become_method: sudo
+  become_user: root
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Install Docker | Wait for connection
+      wait_for_connection:
+    - name: Install Docker | Gather facts
+      setup:
+    - name: Install Docker | Load distribution variables
+      include_tasks: load_vars.yml
+    - name: Install Docker | Load service facts
+      service_facts:
+    - name: Install Docker | Installation
+      include_tasks: playbook_actions.yml

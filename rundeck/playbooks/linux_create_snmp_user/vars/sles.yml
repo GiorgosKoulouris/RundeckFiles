@@ -1,0 +1,6 @@
+---
+snmp_pkgs:
+  - net-snmp
+snmp_etc_conf_file: /etc/snmp/snmpd.conf
+snmp_lib_conf_file: /var/lib/net-snmp/snmpd.conf
+snmp_user_conf_file: "{{ snmp_etc_conf_file }}"

@@ -1,0 +1,14 @@
+- name: Initialize kubernetes cluster
+  hosts: controlNodes:workerNodes
+  become_method: sudo
+  become_user: root
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Install kubernetes | Wait for connection
+      wait_for_connection:
+    - name: Install kubernetes | Gather facts
+      setup:
+    - name: Install kubernetes | Run installation
+      include_role:
+        name: linux_init_kube_cluster

@@ -1,0 +1,21 @@
+---
+update_command: echo &&
+install_command: dnf install -y
+upgrade_command: dnf update -y
+prerequisite_packages: "'dnf-command(versionlock)'"
+k8_repo:
+  file: /etc/yum.repos.d/kubernetes.repo
+  update_repo_command: |
+    tee /etc/yum.repos.d/kubernetes.repo <<EOF
+    [kubernetes]
+    name=Kubernetes
+    baseurl=https://pkgs.k8s.io/core:/stable:/{{ k8_version }}/rpm/
+    enabled=1
+    gpgcheck=1
+    gpgkey=https://pkgs.k8s.io/core:/stable:/{{ k8_version }}/rpm/repodata/repomd.xml.key
+    EOF
+containerd_repo:
+  file:
+  package_name: containerd
+  update_repo_command: 
+package_hold_command: dnf versionlock add

@@ -1,0 +1,98 @@
+---
+- name: Disable swap
+  become: true
+  shell: swapoff -a && sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+- name: Install prerequisite packages
+  become: true
+  when: prerequisite_packages != ""
+  shell: "{{ install_command }} {{ prerequisite_packages }}"
+
+- name: Update K8s repo lists
+  block:
+    - name: Update K8s repo lists | Check if repo exists
+      stat:
+        path: "{{ k8_repo.file }}"
+      register: k8_repo_file_stat
+
+    - name: Update K8s repo lists | Download repo
+      when: not k8_repo_file_stat.stat.exists
+      become: true
+      shell: "{{ k8_repo.update_repo_command }}"
+
+- name: Update Ubuntu containerd repo lists
+  when: ansible_facts['distribution'] != 'Amazon' and ansible_facts['os_family'] != "Suse"
+  block:
+    - name: Update containerd repo lists | Check if repo exists
+      stat:
+        path: "{{ containerd_repo.file }}"
+      register: k8_repo_file_stat
+
+    - name: Update containerd repo lists | Download repo
+      become: true
+      shell: "{{ containerd_repo.update_repo_command }}"
+      when: not k8_repo_file_stat.stat.exists
+
+- name: Install kubernetes related packages
+  become: true
+  shell: "{{ update_command }} {{ install_command }} kubelet kubeadm kubectl"
+
+- name: Install containerd
+  become: true
+  shell: "{{ install_command }} {{ containerd_repo.package_name }}"
+
+- name: Start and enable kubernetes related services
+  become: true
+  service:
+    name: kubelet
+    state: started
+    enabled: yes
+
+- name: Versionlock kubernetes packages
+  become: true
+  shell: "{{ package_hold_command }} kubeadm kubelet kubectl"
+
+- name: Create containerd module config file
+  become: true
+  copy:
+    dest: /etc/modules-load.d/containerd.conf
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      overlay
+      br_netfilter
+
+- name: Modify containerd config
+  become: true
+  shell: |
+    containerd config default | tee /etc/containerd/config.toml >/dev/null 2>&1
+    sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+
+- name: Restart and enable containerd service
+  become: true
+  ansible.builtin.systemd_service:
+    name: containerd
+    state: restarted
+    enabled: true
+
+- name: Create sysctl config file for kubernetes
+  become: true
+  copy:
+    dest: /etc/sysctl.d/kubernetes.conf
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.bridge.bridge-nf-call-iptables = 1
+      net.ipv4.ip_forward = 1
+
+- name: Load modules and reload
+  become: true
+  shell: |
+    modprobe overlay
+    modprobe br_netfilter
+    sysctl --system
+    systemctl daemon-reload
+

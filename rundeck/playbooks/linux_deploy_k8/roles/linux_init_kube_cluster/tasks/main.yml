@@ -1,0 +1,9 @@
+---
+- name: Initiliaze cluster | Control Nodes
+  include_tasks: control_nodes.yml
+  when: "'controlNodes' in group_names"
+
+- name: Initiliaze cluster | Worker Nodes
+  include_tasks: worker_nodes.yml
+  when: "'workerNodes' in group_names"
+
