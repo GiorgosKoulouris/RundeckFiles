@@ -1,1 +1,3 @@
 .DS_Store
+aws/*.json
+credentials/*.json

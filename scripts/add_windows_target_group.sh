@@ -15,6 +15,9 @@ credentialListFilename=01_credential_list.txt
 credentialListFileFullPath="$credentialDir/$credentialListFilename"
 groupListJsonFile="$credentialDir/02_group_list.json"
 
+[ ! -f "$credentialListFileFullPath" ] && touch > "$credentialListFileFullPath"
+[ ! -f "$groupListJsonFile" ] && echo "[]" > "$groupListJsonFile"
+
 grep -Eq "^$targetGroup $osType" "$credentialListFileFullPath"
 if [ $? = 0 ]; then
     echo "This entry already exists. Exiting."

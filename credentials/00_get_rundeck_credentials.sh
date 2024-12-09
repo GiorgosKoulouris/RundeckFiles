@@ -12,6 +12,8 @@ credentialDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 credentialListFilename=01_credential_list.txt
 credentialFileFullPath="$credentialDir/$credentialListFilename"
 
+[ ! -f "$credentialFileFullPath" ] && touch "$credentialFileFullPath"
+
 values="$(grep -E "^$targetGroup $osType" "$credentialFileFullPath")"
 
 if [ $? != 0 ]; then

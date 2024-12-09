@@ -12,6 +12,8 @@ credentialListFilename=01_credential_list.txt
 credentialListFileFullPath="$credentialDir/$credentialListFilename"
 groupListJsonFile="$credentialDir/02_group_list.json"
 
+[ ! -f "$groupListJsonFile" ] && echo "[]" > "$groupListJsonFile"
+
 filesToDelete="$(grep -E "^$targetGroup " "$credentialListFileFullPath" | awk -F' ' '{print $NF}')"
 
 while IFS= read -r line; do

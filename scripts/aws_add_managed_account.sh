@@ -10,6 +10,12 @@ init_vars() {
   export VAULT_ADDR="$6"
   ROLE_ID="$7"
   SECRET_ID="$8"
+
+  accountListFile="/rundeck/aws/accounts.json"
+  roleFullDisplayName="$awsAccountName"
+
+  [ ! -d "/rundeck/aws" ] && mkdir -p "/rundeck/aws"
+  [ ! -f "$accountListFile" ] && echo '[]' >"$accountListFile"
 }
 
 vault_login() {
@@ -41,16 +47,13 @@ create_aws_account_entry() {
   echo "Configuring credentials..."
   vault write $awsAccountName/config/root \
     access_key="$awsAccessKey" \
-    secret_key="$awsSecretKey"  \
+    secret_key="$awsSecretKey" \
     username_template='{{ printf "EC2C-Temp-%s-%s-%s" (printf "%s" (.PolicyName) | truncate 42) (unix_time) (random 5) | truncate 64 }}' || exit 1
 
   vault secrets tune -default-lease-ttl=$leaseTTL -max-lease-ttl=$leaseTTL $awsAccountName/ || exit 1
 }
 
 update_account_list() {
-  accountListFile="/rundeck/aws/accounts.json"
-  roleFullDisplayName="$awsAccountName"
-
   grep -iq "$awsAccountName" $accountListFile
   if [ $? -eq 0 ]; then
     echo "Account already exists. Skipping account list update."
@@ -95,4 +98,3 @@ create_aws_account_entry
 update_account_list
 update_aws_config
 print_info
-

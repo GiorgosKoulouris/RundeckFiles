@@ -8,6 +8,9 @@ init_vars() {
   export VAULT_ADDR="$4"
   ROLE_ID="$5"
   SECRET_ID="$6"
+
+  roleListFile="/rundeck/aws/roles.json"
+  [ ! -f "$roleListFile" ] && echo '[]' >"$roleListFile"
 }
 
 vault_login() {
@@ -60,7 +63,6 @@ configure_role() {
 
 update_aws_role_list() {
   # ======== Update the role list ========
-  roleListFile="/rundeck/aws/roles.json"
   roleFullDisplayName="$awsAccountName - $roleName"
 
   grep -iq "$awsAccountName - $roleName" $roleListFile
@@ -82,4 +84,3 @@ aws_account_prechecks
 configure_role
 update_aws_role_list
 print_info
-
