@@ -1,0 +1,11 @@
+---
+- name: Run Windows bootstrap
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+    - name: Gather facts
+      setup:
+    - name: Execute bootstrap
+      include_tasks: playbook_actions.yml

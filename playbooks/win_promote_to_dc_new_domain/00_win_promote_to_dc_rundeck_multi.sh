@@ -17,6 +17,8 @@ init_vars() {
 	HOSTVARS_PATH="./vars/hostvars"
 
 	CSV_FILE="$1"
+
+	[ ! -d "$inventoryBaseDir" ] && mkdir "$inventoryBaseDir"
 }
 
 create_files_list() {

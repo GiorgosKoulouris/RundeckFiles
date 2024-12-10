@@ -1,22 +1,14 @@
-- name: Create the user
+- name: Create new Linux user  
   become: true
-  command: useradd -m -s /bin/bash "{{ username }}"
-  ignore_errors: true # Ignore error if user already exists
-  when: username not in ansible_facts.get('user_id', [])
+  user:
+    name: "{{ username }}"
+    state: present
+    shell: /bin/bash
 
 - name: Set user password
   become: true
   command: echo "{{ username }}:{{ password }}" | chpasswd
   when: password | length > 0
-
-- name: Create the .ssh directory
-  become: true
-  file:
-    path: "/home/{{ username }}/.ssh"
-    state: directory
-    owner: "{{ username }}"
-    group: "{{ username }}"
-    mode: "0700"
 
 - name: Add SSH public key
   become: true
@@ -30,7 +22,7 @@
   when: sudo_command | length > 0
   become: true
   copy:
-    content: "{{ username }} ALL=(ALL) NOPASSWD: {{ sudo_command }}"
+    content: "{{ username }} ALL=(ALL) NOPASSWD: {{ sudo_command + '\n' }}"
     dest: "/etc/sudoers.d/99-{{ username }}-user"
     owner: root
     group: root

@@ -1,0 +1,11 @@
+---
+- name: Run Create Local User
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+    - name: Gather facts
+      setup:
+    - name: Execute playbook
+      include_tasks: playbook_actions.yml

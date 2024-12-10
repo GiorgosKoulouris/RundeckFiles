@@ -28,6 +28,8 @@ init_vars() {
 	NETBIOS="$5"
 	MODE="$6"
 	SAFEMODEPASS="$7"
+
+	[ ! -d "$inventoryBaseDir" ] && mkdir "$inventoryBaseDir"
 }
 
 create_files_single() {

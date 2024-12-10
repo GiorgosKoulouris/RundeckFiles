@@ -1,0 +1,26 @@
+---
+- name: Create Admin User
+  when: isAdmin | default(false) | bool
+  ansible.windows.win_user:
+    state: present
+    name: "{{ username }}"
+    password: "{{ password }}"
+    account_locked: false
+    password_never_expires: true
+    account_disabled: false
+    password_expired: false
+    update_password: always
+    groups:
+      - Administrators
+
+- name: Create Non-Admin User
+  when: not isAdmin | default(false) | bool
+  ansible.windows.win_user:
+    state: present
+    name: "{{ username }}"
+    password: "{{ password }}"
+    account_locked: false
+    password_never_expires: true
+    account_disabled: false
+    password_expired: false
+    update_password: always

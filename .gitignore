@@ -1,3 +1,6 @@
 .DS_Store
 aws/*.json
 credentials/*.json
+credentials/*.txt
+credentials/*.ssh
+credentials/*.password

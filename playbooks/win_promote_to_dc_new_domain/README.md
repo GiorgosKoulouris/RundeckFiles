@@ -51,6 +51,7 @@ Make sure that Authentication settings on target OS and winRM settings are set c
 ```powershell
 Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $true
 winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+Set-NetFirewallProfile -Profile domain,public,private -Enabled False
 ```
 
 <h2>OBJC related errors</h2>
