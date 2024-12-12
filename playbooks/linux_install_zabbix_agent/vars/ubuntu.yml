@@ -1,0 +1,6 @@
+---
+install_command: dpkg -i
+post_command: apt update -y
+repoName: "zabbix-release_latest_{{ version }}+ubuntu{{ ansible_facts['distribution_major_version'] }}.04_all.deb"
+repoURL: "https://repo.zabbix.com/zabbix/{{ version }}/release/ubuntu/pool/main/z/zabbix-release/{{ repoName }}"
+

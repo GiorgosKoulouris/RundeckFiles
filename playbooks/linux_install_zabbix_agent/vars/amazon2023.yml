@@ -1,0 +1,5 @@
+---
+install_command: rpm -Uvh
+post_command: yum clean all
+repoName: "zabbix-release-latest-{{ version }}.amzn2023.noarch.rpm"
+repoURL: "https://repo.zabbix.com/zabbix/{{ version }}/release/amazonlinux/2023/noarch/{{ repoName }}"

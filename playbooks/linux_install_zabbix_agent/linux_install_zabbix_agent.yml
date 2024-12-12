@@ -1,0 +1,17 @@
+---
+- name: Run Linux Zabbix agent install
+  become_method: sudo
+  become_user: root
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Zabbix agent install | Wait for connection
+      wait_for_connection:
+    - name: Zabbix agent install | Gather facts
+      setup:
+    - name: Zabbix agent install | Load distribution variables
+      include_tasks: load_vars.yml
+    - name: Zabbix agent install | Load service facts
+      service_facts:
+    - name: Zabbix agent install | Agent installation
+      include_tasks: playbook_actions.yml

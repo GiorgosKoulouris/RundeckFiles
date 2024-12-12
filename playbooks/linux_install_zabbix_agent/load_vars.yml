@@ -1,0 +1,16 @@
+---
+- name: Zabbix agent install | Load Amazon distribution variables
+  ansible.builtin.include_vars: "vars/{{ ansible_facts['distribution']|lower }}{{ ansible_facts['distribution_major_version'] }}.yml"
+  when: ansible_facts['distribution'] in ['Amazon']
+
+- name: Zabbix agent install | Load Ubuntu distribution variables
+  ansible.builtin.include_vars: "vars/{{ ansible_facts['distribution']|lower }}.yml"
+  when: ansible_facts['distribution'] in ['Ubuntu']
+
+- name: Zabbix agent install | Load SUSE distribution variables
+  ansible.builtin.include_vars: "vars/sles.yml"
+  when: ansible_facts['os_family'] == "Suse"
+
+- name: Zabbix agent install | Load RedHat, CentOS, Oracle distribution variables
+  ansible.builtin.include_vars: "vars/el.yml"
+  when: ansible_facts['distribution'] in ['CentOS','OracleLinux','RedHat']

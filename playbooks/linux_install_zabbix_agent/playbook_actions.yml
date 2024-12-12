@@ -1,0 +1,95 @@
+---
+- name: Remove existing zabbix packages
+  become: true
+  when: ansible_facts['os_family'] != "Suse"
+  package:
+    name: 
+      - zabbix-*
+      - zabbix*
+    state: absent
+  ignore_errors: true
+
+- name: Remove existing zabbix packages (Fix for SUSE)
+  become: true
+  when: ansible_facts['os_family'] == "Suse"
+  command: zypper remove -y zabbix*
+
+- name: Download package
+  become: true
+  get_url:
+    url: "{{ repoURL }}"
+    dest: "/tmp/{{ repoName }}"
+    mode: "0644"
+
+- name: Install Package
+  become: true
+  command: "{{ install_command }} /tmp/{{ repoName }}"
+
+- name: Execute post install command
+  become: true
+  command: "{{ post_command }}"
+
+- name: Install zabbix packages
+  become: true
+  package:
+    name:
+      - zabbix-agent2 
+      - zabbix-agent2-plugin-*
+    state: latest
+
+- name: Modify agent conf | Remove allowed server IPs (passive)
+  become: true
+  lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    regexp: '^Server='
+    state: absent
+
+- name: Modify agent conf | Add allowed server IPs (passive)
+  become: true
+  lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    insertafter: '^# Server=$'
+    line: "Server={{ serverIP }}"
+
+- name: Modify agent conf | Remove active agent config
+  become: true
+  lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    regexp: '^ServerActive='
+    state: absent
+
+- name: Modify agent conf | Remove static defined hostnames
+  become: true
+  lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    regexp: '^Hostname='
+    state: absent
+
+- name: Modify agent conf | Remove existing status ports
+  become: true
+  when: statusPort | length > 0
+  lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    regexp: '^StatusPort='
+    state: absent
+
+- name: Modify agent conf | Add allowed server IPs (passive)
+  become: true
+  when: statusPort | length > 0
+  lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    insertafter: '^# StatusPort=$'
+    line: "StatusPort={{ statusPort }}"
+
+- name: Restart and enable zabbix agent service
+  become: true
+  service:
+    name: zabbix-agent2
+    state: restarted
+    enabled: true
+
+- name: Remove the downloaded package
+  become: true
+  file:
+    path: "/tmp/{{ repoName }}"
+    state: absent

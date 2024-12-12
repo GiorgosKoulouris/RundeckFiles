@@ -1,0 +1,7 @@
+---
+install_command: rpm -Uvh
+post_command: yum clean all
+repoName: "zabbix-release-latest-{{ version }}.el{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+repoURL: "https://repo.zabbix.com/zabbix/{{ version }}/release/rhel/{{ ansible_facts['distribution_major_version'] }}/noarch/{{ repoName }}"
+
+

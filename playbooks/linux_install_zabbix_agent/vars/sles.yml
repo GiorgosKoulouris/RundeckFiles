@@ -1,0 +1,5 @@
+---
+install_command: rpm -Uvh
+post_command: zypper --gpg-auto-import-keys refresh 'Zabbix Official Repository'
+repoName: "zabbix-release-latest-{{ version }}.sles{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+repoURL: "https://repo.zabbix.com/zabbix/{{ version }}/release/sles/{{ ansible_facts['distribution_major_version'] }}/noarch/{{ repoName }}"
