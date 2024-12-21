@@ -1,0 +1,11 @@
+---
+- name: Windows - Promote to DC - Existing Domain
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+    - name: Gather facts
+      setup:
+    - name: Promote to DC
+      include_tasks: playbook_actions.yml

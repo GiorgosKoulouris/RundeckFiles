@@ -1,0 +1,54 @@
+---
+- name: Rename host
+  win_hostname:
+    name: "{{ hostname }}"
+
+- name: Add the server to the domain
+  microsoft.ad.membership:
+    hostname: "{{ hostname }}"
+    dns_domain_name: "{{ domain }}"
+    domain_admin_user: "{{ domain_admin_username }}"
+    domain_admin_password: "{{ domain_admin_password }}"
+    reboot: true
+    state: domain
+
+- name: Wait for host to come back online
+  wait_for_connection:
+    timeout: 300
+
+- name: Install DNS role
+  win_feature:
+    name: DNS
+    state: present
+    include_sub_features: yes
+
+- name: Install RSAT for DNS Management Tools
+  win_feature:
+    name: RSAT-DNS-Server
+    state: present
+
+- name: Install GPMC
+  win_feature:
+    name: GPMC
+    state: present
+    include_sub_features: yes
+
+- name: Install AD Domain Services role
+  win_feature:
+    name: AD-Domain-Services
+    state: present
+    include_sub_features: yes
+
+- name: Promote server to Domain Controller
+  microsoft.ad.domain_controller:
+    dns_domain_name: "{{ domain }}"
+    domain_admin_user: "{{ domain_admin_username }}"
+    domain_admin_password: "{{ domain_admin_password }}"
+    site_name: "{{ site_name }}"
+    safe_mode_password: "{{ safe_mode_password }}"
+    state: domain_controller
+    reboot: true
+
+- name: Wait for host to come back online
+  wait_for_connection:
+    timeout: 300
