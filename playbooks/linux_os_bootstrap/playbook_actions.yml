@@ -80,6 +80,14 @@
     - firewalld
     - ufw
 
+- name: Ensure preserve_hostname is set to true on cloud_init config
+  become: true
+  lineinfile:
+    path: /etc/cloud/cloud.cfg
+    regexp: '^preserve_hostname: false$'
+    line: 'preserve_hostname: true'
+    state: present
+
 - name: OS Bootstrap | Patch
   become: true
   when: patch | default(false) | bool
