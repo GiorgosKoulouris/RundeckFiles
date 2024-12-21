@@ -1,0 +1,11 @@
+---
+- name: Windows - Add computer to domain
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+    - name: Gather facts
+      setup:
+    - name: Add to domain
+      include_tasks: playbook_actions.yml

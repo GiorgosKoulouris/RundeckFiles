@@ -1,0 +1,29 @@
+---
+- name: Rename host
+  win_hostname:
+    name: "{{ hostname }}"
+  register: hostname_changed
+
+- name: Reboot if hostname changed
+  win_reboot:
+    msg: "Rebooting to apply hostname change"
+    reboot_timeout: 60
+    post_reboot_delay: 90
+  when: hostname_changed.changed
+
+- name: Wait for host to come back online
+  wait_for_connection:
+    timeout: 300
+
+- name: Add the server to the domain
+  microsoft.ad.membership:
+    hostname: "{{ hostname }}"
+    dns_domain_name: "{{ domain }}"
+    domain_admin_user: "{{ domain_admin_username }}"
+    domain_admin_password: "{{ domain_admin_password }}"
+    reboot: true
+    state: domain
+
+- name: Wait for host to come back online
+  wait_for_connection:
+    timeout: 300
