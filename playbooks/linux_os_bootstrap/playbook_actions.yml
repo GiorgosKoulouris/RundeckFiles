@@ -42,7 +42,7 @@
       loop:
         - sshd
         - ssh
-    
+
 - name: Remove extra MOTD messages
   become: true
   shell: rm -f /usr/lib/motd.d/*
@@ -96,3 +96,4 @@
       shell: "{{ update_command }} {{ upgrade_command }}"
     - name: OS Bootstrap | Patch | Reboot
       reboot:
+

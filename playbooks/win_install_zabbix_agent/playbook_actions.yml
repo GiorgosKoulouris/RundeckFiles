@@ -7,7 +7,7 @@
 - name: Download the MSI installer
   win_get_url:
     url: "https://cdn.zabbix.com/zabbix/binaries/stable/7.2/7.2.1/zabbix_agent2-7.2.1-windows-amd64-openssl.msi"
-    dest: "C:\\Temp\\zabbix_installer.msi" 
+    dest: "C:\\Temp\\zabbix_installer.msi"
 
 - name: Uninstall existing agents
   win_package:
@@ -25,3 +25,4 @@
   win_file:
     path: "C:\\Temp\\zabbix_installer.msi"
     state: absent
+
