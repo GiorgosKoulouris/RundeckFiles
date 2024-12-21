@@ -20,7 +20,6 @@ if [ "$authMethod" = 'ssh' ]; then
   /var/lib/rundeck/.local/bin/ansible-playbook -i "$ip," $playbookFile \
     -e "ansible_user=$username \
     ansible_ssh_private_key_file=$keyFile \
-    hostname=$hostname \
     serverIP=$serverIP \
     statusPort=$statusPort \
     version=$version"
@@ -30,7 +29,6 @@ elif [ "$authMethod" = 'password' ]; then
   /var/lib/rundeck/.local/bin/ansible-playbook -i "$ip," $playbookFile \
     -e "ansible_user=$username \
     ansible_password=$password \
-    hostname=$hostname \
     serverIP=$serverIP \
     statusPort=$statusPort \
     version=$version"

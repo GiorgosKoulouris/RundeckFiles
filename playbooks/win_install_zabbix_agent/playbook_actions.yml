@@ -1,0 +1,27 @@
+---
+- name: Ensure C:\Temp folder exists
+  win_file:
+    path: "C:\\Temp"
+    state: directory
+
+- name: Download the MSI installer
+  win_get_url:
+    url: "https://cdn.zabbix.com/zabbix/binaries/stable/7.2/7.2.1/zabbix_agent2-7.2.1-windows-amd64-openssl.msi"
+    dest: "C:\\Temp\\zabbix_installer.msi" 
+
+- name: Uninstall existing agents
+  win_package:
+    path: "C:\\Temp\\zabbix_installer.msi"
+    arguments: "/qn"
+    state: absent
+
+- name: Install the agent
+  win_package:
+    path: "C:\\Temp\\zabbix_installer.msi"
+    arguments: "/qn /l*v C:\\Temp\\zabbix_install_log.txt LOGTYPE=file SERVER={{ serverIP }} LISTENPORT=10050 STATUSPORT={{ statusPort }} SKIP=fw"
+    state: present
+
+- name: Remove the MSI installer after installation
+  win_file:
+    path: "C:\\Temp\\zabbix_installer.msi"
+    state: absent
