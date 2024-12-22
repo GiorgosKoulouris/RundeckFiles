@@ -18,6 +18,13 @@
     state: present
     exclusive: true
 
+- name: Show timestamps in bash history
+  become: true
+  lineinfile:
+    path: "/home/{{ username }}/.bashrc"
+    line: 'export HISTTIMEFORMAT="%d/%m/%y %T "'
+    state: present
+
 - name: Modify sudo permissions
   when: sudo_command | length > 0
   become: true

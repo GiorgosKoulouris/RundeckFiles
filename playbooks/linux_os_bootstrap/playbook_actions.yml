@@ -88,6 +88,20 @@
     line: 'preserve_hostname: true'
     state: present
 
+- name: Show timestamps in bash history - root
+  become: true
+  lineinfile:
+    path: /root/.bashrc
+    line: 'export HISTTIMEFORMAT="%d/%m/%y %T "'
+    state: present
+
+- name: Show timestamps in bash history - automation user
+  become: true
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: 'export HISTTIMEFORMAT="%d/%m/%y %T "'
+    state: present
+
 - name: OS Bootstrap | Patch
   become: true
   when: patch | default(false) | bool
