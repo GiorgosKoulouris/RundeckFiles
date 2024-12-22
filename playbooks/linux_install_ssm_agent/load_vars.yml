@@ -1,0 +1,8 @@
+---
+- name: SSM agent install | Load Ubuntu distribution variables
+  ansible.builtin.include_vars: "vars/{{ ansible_facts['distribution']|lower }}.yml"
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: SSM agent install | Load Non-Ubuntu distribution variables
+  ansible.builtin.include_vars: "vars/other.yml"
+  when: ansible_facts['distribution'] != 'Ubuntu'

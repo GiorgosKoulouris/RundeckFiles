@@ -1,0 +1,4 @@
+---
+install_command: dpkg -i
+repoName: "amazon-ssm-agent.deb"
+repoURL: "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_amd64/{{ repoName }}"

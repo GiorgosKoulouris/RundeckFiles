@@ -1,0 +1,22 @@
+---
+- name: Ensure C:\Temp folder exists
+  win_file:
+    path: "C:\\Temp"
+    state: directory
+
+- name: Download the EXE installer
+  win_get_url:
+    url: "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/windows_amd64/AmazonSSMAgentSetup.exe"
+    dest: "C:\\Temp\\SSMAgent_latest.exe"
+
+- name: Install the agent
+  win_package:
+    path: "C:\\Temp\\SSMAgent_latest.exe"
+    arguments: "/S"
+    state: present
+
+- name: Remove the MSI installer after installation
+  win_file:
+    path: "C:\\Temp\\SSMAgent_latest.exe"
+    state: absent
+

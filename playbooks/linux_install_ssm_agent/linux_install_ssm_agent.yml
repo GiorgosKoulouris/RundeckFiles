@@ -1,0 +1,17 @@
+---
+- name: Run Linux SSM agent install
+  become_method: sudo
+  become_user: root
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: SSM agent install | Wait for connection
+      wait_for_connection:
+    - name: SSM agent install | Gather facts
+      setup:
+    - name: SSM agent install | Load distribution variables
+      include_tasks: load_vars.yml
+    - name: SSM agent install | Load service facts
+      service_facts:
+    - name: SSM agent install | Agent installation
+      include_tasks: playbook_actions.yml
