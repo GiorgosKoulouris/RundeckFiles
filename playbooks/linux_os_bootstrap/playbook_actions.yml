@@ -46,6 +46,7 @@
 - name: Remove extra MOTD messages
   become: true
   shell: rm -f /usr/lib/motd.d/*; chmod 644 /etc/update-motd.d/*
+  ignore_errors: true
 
 - name: OS Bootstrap | Write MOTD
   become: true
