@@ -13,7 +13,7 @@
   lineinfile:
     path: /etc/ssh/sshd_config
     state: absent
-    regexp: '^(.*PermitRootLogin.*|.*ClientAliveInterval.*|.*ClientAliveCountMax.*|.*ChallengeResponseAuthentication.*|.*PasswordAuthentication.*|.*UsePAM.*|.*PrintMotd.*)$'
+    regexp: '^(.*PermitRootLogin.*|.*ClientAliveInterval.*|.*ClientAliveCountMax.*|.*ChallengeResponseAuthentication.*|.*PasswordAuthentication.*|.*UsePAM.*|.*PrintMotd.*|.*AddressFamily.*)$'
 
 - name: OS Bootstrap | Modify ssh settings
   become: true
@@ -29,6 +29,7 @@
           PasswordAuthentication no
           UsePAM yes
           PrintMotd no
+          AddressFamily inet
         state: present
 
     - name: Modify ssh settings | Restart sshd
@@ -106,9 +107,9 @@
 - name: OS Bootstrap | Patch
   become: true
   when: patch | default(false) | bool
-  block:
-    - name: OS Bootstrap | Patch | Update
-      shell: "{{ update_command }} {{ upgrade_command }}"
-    - name: OS Bootstrap | Patch | Reboot
-      reboot:
+  shell: "{{ update_command }} {{ upgrade_command }}"
+
+- name: OS Bootstrap | Reboot
+  become: true
+  reboot:
 
