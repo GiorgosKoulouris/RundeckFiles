@@ -84,6 +84,7 @@
 
 - name: Ensure preserve_hostname is set to true on cloud_init config
   become: true
+  ignore_errors: true
   lineinfile:
     path: /etc/cloud/cloud.cfg
     regexp: '^preserve_hostname: false$'
@@ -96,6 +97,9 @@
     path: /root/.bashrc
     line: 'export HISTTIMEFORMAT="%d/%m/%y %T "'
     state: present
+    create: true
+    owner: root
+    mode: '600'
 
 - name: Show timestamps in bash history - automation user
   become: true
@@ -103,6 +107,9 @@
     path: "/home/{{ ansible_user }}/.bashrc"
     line: 'export HISTTIMEFORMAT="%d/%m/%y %T "'
     state: present
+    create: true
+    owner: "{{ ansible_user }}"
+    mode: '600'
 
 - name: OS Bootstrap | Patch
   become: true
