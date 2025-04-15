@@ -1,0 +1,4 @@
+---
+install_command: yum install -y
+update_command: echo &&
+upgrade_command: yum update -y
