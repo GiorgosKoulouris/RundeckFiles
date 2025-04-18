@@ -1,0 +1,9 @@
+---
+required_pkgs:
+  - samba-common-tools
+  - realmd
+  - oddjob
+  - oddjob-mkhomedir
+  - sssd
+  - adcli
+  - krb5-workstation

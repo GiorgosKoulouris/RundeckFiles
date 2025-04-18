@@ -1,0 +1,17 @@
+---
+- name: Linux domain join
+  become_method: sudo
+  become_user: root
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+    - name: Gather facts
+      setup:
+    - name: Load distribution variables
+      include_tasks: load_vars.yml
+    - name: Load service facts
+      service_facts:
+    - name: Domain join Actions
+      include_tasks: playbook_actions.yml

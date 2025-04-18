@@ -1,0 +1,138 @@
+
+- name: Install required packages
+  become: true
+  ansible.builtin.package:
+    name: "{{ required_pkgs }}"
+    state: latest
+  register: package_installation
+
+- name: Ubuntu specific steps
+  become: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+  block:
+    - name: Check if /etc/krb5.conf exists
+      stat:
+        path: /etc/krb5.conf
+      register: krb_config_file
+
+    - name: Create krb5.conf file
+      copy:
+        dest: /etc/krb5.conf
+        content: |
+          [libdefaults]
+          rdns = false
+        owner: root
+        group: root
+        mode: '0644'
+      when: not krb_config_file.stat.exists
+
+    - name: Modify krb5.conf line
+      lineinfile:
+        path: /etc/krb5.conf
+        insertafter: '^\[libdefaults\]'
+        line: 'rdns = false'
+        state: present
+      when: krb_config_file.stat.exists
+
+    - name: Modify pam settings for homedir
+      command: pam-auth-update --enable mkhomedir
+
+- name: Join system
+  become: true
+  command: /bin/bash -c "echo {{ join_password }} | realm join --user={{ join_user }} {{ join_domain }}"
+  register: join_command
+  failed_when:
+    - join_command.failed == true
+    - '"Already joined to this domain" not in join_command.stderr'
+  no_log: True
+
+- name: Edit SSSD configuration file
+  block:
+    - name: Modify access_provider line
+      become: true
+      lineinfile:
+        path: /etc/sssd/sssd.conf
+        regexp: '^access_provider'
+        line: 'access_provider = simple'
+        state: present
+
+    - name: Add groups to allowed logins
+      become: true
+      command: "realm permit -g {{ item }}"
+      loop: "{{ allowed_groups.split(',') }}"
+      when: allowed_groups != '' and allowed_groups is defined
+
+    - name: Add use_fully_qualified_names line
+      become: true
+      lineinfile:
+        path: /etc/sssd/sssd.conf
+        regexp: '^use_fully_qualified_names'
+        line: 'use_fully_qualified_names = False'
+        state: present
+
+    - name: Add domain groups to sudoers file
+      become: true
+      block:
+        - name: Add domain groups to sudoers file | No domain suffix
+          lineinfile:
+            path: /etc/sudoers.d/100-tcop-users
+            create: true
+            owner: root
+            group: root
+            mode: '600'
+            state: present
+            line: "%{{ item | lower }} ALL=(ALL) NOPASSWD: ALL"
+            validate: "visudo -cf %s"
+          loop: "{{ allowed_groups.split(',') }}"
+          when: allowed_groups != '' and allowed_groups is defined and ( ansible_facts['distribution'] == 'Ubuntu' or ansible_facts['os_family'] == "Suse" )
+
+        - name: Add domain groups to sudoers file | With domain suffix
+          lineinfile:
+            path: /etc/sudoers.d/100-tcop-users
+            create: true
+            owner: root
+            group: root
+            mode: '600'
+            state: present
+            line: "%{{ (item ~ '@' ~ join_domain) | lower }} ALL=(ALL) NOPASSWD: ALL"
+            validate: "visudo -cf %s"
+          loop: "{{ allowed_groups.split(',') }}"
+          when: allowed_groups != '' and allowed_groups is defined and ansible_facts['distribution'] != 'Ubuntu' and ansible_facts['os_family'] != "Suse"
+
+    - name: Restart SSSD service
+      become: true
+      service:
+        name: sssd
+        state: restarted
+
+- name: Remove config items from sshd
+  become: true
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: absent
+    regexp: '^(.*ChallengeResponseAuthentication.*|.*PasswordAuthentication.*)$'
+
+- name: Modify ssh settings
+  become: true
+  block:
+    - name: Modify ssh settings | Modify configuration file
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^{{ item }}"
+        line: "{{ item }} yes"
+        state: present
+      loop:
+        - ChallengeResponseAuthentication
+        - PasswordAuthentication
+
+    - name: Modify ssh settings | Restart sshd
+      service:
+        name: "{{ item }}"
+        state: restarted
+      register: stop_service
+      failed_when:
+        - stop_service.failed == true
+        - '"Could not find the requested service" not in stop_service.msg'
+      loop:
+        - sshd
+        - ssh

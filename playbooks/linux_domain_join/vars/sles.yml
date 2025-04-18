@@ -1,0 +1,8 @@
+---
+required_pkgs:
+  - realmd
+  - adcli
+  - sssd
+  - sssd-tools
+  - sssd-ad
+  - samba-client

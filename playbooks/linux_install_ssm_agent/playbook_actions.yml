@@ -1,16 +1,9 @@
 ---
 - name: Remove existing SSM packages
   become: true
-  when: ansible_facts['os_family'] != "Suse"
   package:
-    name: amazon-ssm*
+    name: amazon-ssm-agent
     state: absent
-  ignore_errors: true
-
-- name: Remove existing SSM packages (Fix for SUSE)
-  become: true
-  when: ansible_facts['os_family'] == "Suse"
-  command: zypper remove -y amazon-ssm*
 
 - name: Download package
   become: true

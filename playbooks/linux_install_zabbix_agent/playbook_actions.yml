@@ -1,18 +1,11 @@
 ---
 - name: Remove existing zabbix packages
   become: true
-  when: ansible_facts['os_family'] != "Suse"
   package:
     name: 
       - zabbix-*
       - zabbix*
     state: absent
-  ignore_errors: true
-
-- name: Remove existing zabbix packages (Fix for SUSE)
-  become: true
-  when: ansible_facts['os_family'] == "Suse"
-  command: zypper remove -y zabbix*
 
 - name: Download package
   become: true
